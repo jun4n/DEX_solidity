@@ -910,8 +910,8 @@
       }
     },
     "src/Dex.sol": {
-      "lastModificationDate": 1679298969677,
-      "contentHash": "b67bd019f33eeb8e5faff2f69ccbe291",
+      "lastModificationDate": 1679303674167,
+      "contentHash": "33c2e4a18776d5b27d4333304837086c",
       "sourceName": "src/Dex.sol",
       "solcConfig": {
         "settings": {
@@ -942,6 +942,7 @@
         }
       },
       "imports": [
+        "lib/forge-std/src/console.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol",

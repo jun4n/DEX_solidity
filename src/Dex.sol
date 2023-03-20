@@ -8,26 +8,9 @@ Swap : Pool 생성 시 지정된 두 종류의 토큰을 서로 교환할 수 �
 Add / Remove Liquidity : ERC-20 기반 LP 토큰을 사용해야 합니다. 수수료 수입과 Pool에 기부된 금액을 제외하고는 더 많은 토큰을 회수할 수 있는 취약점이 없어야 합니다. Concentrated Liquidity는 필요 없습니다.
 
  */
-/*contract LP_ERC20 is ERC20{
-    string private _name;
-    string private _symbol;
-    address private owner;
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
-        owner = msg.sender;
-    }
-
-    function my_mint(address account, uint256 amount) external {
-        require(msg.sender == owner, "only owner can mint");
-        require(account != address(0), "ERC20: mint to the zero address");
-        address(this)._mint(account, amount);
-    }
-}*/
-
+import "../lib/forge-std/src/console.sol";
 contract Dex is  ERC20{
     address private owner;
-    //ERC20 token_LP;
     address public token_x;
     address public token_y;
     uint public reserve_x;
@@ -35,8 +18,6 @@ contract Dex is  ERC20{
     uint public price_x;
     uint public price_y;
     uint public token_liquidity_L;
-    mapping(address => uint256) supply_x;
-    mapping(address => uint256) supply_y;
 
     function sqrt(uint y) public returns(uint z){
         if (y > 3) {
@@ -67,12 +48,11 @@ contract Dex is  ERC20{
         require(success, "token y transferFrom failed");
         reserve_x += tokenXAmount;
         reserve_y += tokenYAmount;
-        supply_x[msg.sender] = tokenXAmount;
-        supply_y[msg.sender] = tokenYAmount;
+        
+        // LP token 발급
         if(totalSupply() == 0){
             token_liquidity_L = sqrt(reserve_x * reserve_y);
         }
-        // LP token 발급
         uint token_amount = sqrt((tokenXAmount * tokenYAmount));
         require(token_amount > minimumLPTokenAmount, "token_amount > minimumLPTokenAmount");
         _mint(msg.sender, token_amount);
@@ -82,7 +62,20 @@ contract Dex is  ERC20{
 
     }
     function removeLiquidity(uint256 LPTokenAmount, uint256 minimumTokenXAmount, uint256 minimumTokenYAmount) external returns(uint rx, uint ry){
+        require(balanceOf(msg.sender) >= LPTokenAmount, "balanceOf(msg.sender) >= LPTokenAmount");
+        
+        // 소수점 이슈 발생
+        //uint stake = LPTokenAmount / totalSupply();
+        rx = reserve_x * LPTokenAmount / totalSupply();
+        ry = reserve_y * LPTokenAmount / totalSupply();
+        console.log("!!!!%d, %d, %d", LPTokenAmount, rx, ry);
 
+        reserve_x -= rx;
+        reserve_y -= ry;
+        _burn(msg.sender, LPTokenAmount);
+
+        ERC20(token_x).transfer(msg.sender, rx);
+        ERC20(token_y).transfer(msg.sender, ry);
     }
     function transfer(address to, uint256 lpAmount) override public returns (bool) { 
 
