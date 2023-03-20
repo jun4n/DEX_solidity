@@ -15,8 +15,6 @@ contract Dex is  ERC20{
     address public token_y;
     uint public reserve_x;
     uint public reserve_y;
-    uint public price_x;
-    uint public price_y;
     uint public token_liquidity_L;
 
     function sqrt(uint y) public returns(uint z){
@@ -81,23 +79,39 @@ contract Dex is  ERC20{
     function transfer(address to, uint256 lpAmount) override public returns (bool) { 
 
     }
+    // 공급해놓은 유동성에서 토큰을 스왑한다는건가?
     function swap(uint256 tokenXAmount, uint256 tokenYAmount, uint256 tokenMinimumOutputAmount) external returns (uint256 outputAmount){
-        require(tokenXAmount != 0 || tokenYAmount != 0);
+        require((tokenXAmount != 0 && tokenYAmount ==0 ) || (tokenYAmount != 0 && tokenXAmount == 0));
         uint tmp_reserve_y;
         uint tmp_reserve_x;
-        // Y로 X교환
+        // Y로 X교환, 수수료 이슈
         if(tokenXAmount == 0){
-            tmp_reserve_y = reserve_y - tokenYAmount;
-            tmp_reserve_x = token_liquidity_L ** 2 / tmp_reserve_y;
-            require(reserve_x - tmp_reserve_x >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+            ERC20(token_y).transferFrom(msg.sender, address(this), tokenYAmount);
+
+            tmp_reserve_y = reserve_y + tokenYAmount;
+            tmp_reserve_x = (reserve_x * reserve_y) / tmp_reserve_y;
+            outputAmount = (reserve_x - tmp_reserve_x) * 999 / 1000;
+            require(outputAmount >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+            ERC20(token_x).transfer(msg.sender, outputAmount);
+
+            reserve_y += tokenYAmount;
+            reserve_x -= outputAmount;
         }else if(tokenYAmount == 0){
-            tmp_reserve_x = reserve_x - tokenXAmount;
-            tmp_reserve_y = token_liquidity_L ** 2 / tmp_reserve_x;
-            require(reserve_y - tmp_reserve_y >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+            ERC20(token_x).transferFrom(msg.sender, address(this), tokenXAmount);
+            // 스왑 이후의 X'
+            tmp_reserve_x = reserve_x + tokenXAmount;
+            // K / X' = Y'
+            // 스왑 이후의 Y'
+            tmp_reserve_y = (reserve_x * reserve_y) / tmp_reserve_x;
+            // Y-Y' => 스왑으로 얻는 y토큰 => 수수료 0.1%
+            outputAmount = (reserve_y - tmp_reserve_y) * 999 / 1000;
+            require(outputAmount >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+            ERC20(token_y).transfer(msg.sender, outputAmount);
+            
+            reserve_x += tokenXAmount;
+            reserve_y -= outputAmount; 
         }else{
             revert();
         }
-        reserve_x = tmp_reserve_x;
-        reserve_y = tmp_reserve_y;
     }
 }

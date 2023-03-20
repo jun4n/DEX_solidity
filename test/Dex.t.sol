@@ -160,7 +160,8 @@ contract DexTest is Test {
         emit log_named_uint("remaining poolAmountY", poolAmountY);
 
         (uint rx, uint ry) = dex.removeLiquidity(firstLPReturn, 0, 0);
-
+        // lp토큰의 1/3만 정리, stake에 따라서 수수료를 줘야함.
+        console.log("%d %d %d",(poolAmountY * 10001 / 10000 / 3), ry, (poolAmountY * 9999 / 10000 / 3));
         bool successX = rx <= (poolAmountX * 10001 / 10000 / 3) && rx >= (poolAmountX * 9999 / 10000 / 3); // allow 0.01%;
         bool successY = ry <= (poolAmountY * 10001 / 10000 / 3) && ry >= (poolAmountY * 9999 / 10000 / 3); // allow 0.01%;
         assertTrue(successX, "remove liquidity after swap error; rx");
@@ -177,7 +178,7 @@ contract DexTest is Test {
         uint poolAmountX = 60000 ether + 3000 ether;
         uint poolAmountY = 80000 ether + 4000 ether;
 
-
+        // Y - K / X
         int expectedOutput = -(int(poolAmountX * poolAmountY) / int(poolAmountX + 300 ether)) + int(poolAmountY);
         expectedOutput = expectedOutput * 999 / 1000; // 0.1% fee
         uint uExpectedOutput = uint(expectedOutput);
