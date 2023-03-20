@@ -910,8 +910,8 @@
       }
     },
     "src/Dex.sol": {
-      "lastModificationDate": 1679308799354,
-      "contentHash": "ed2c752dd2bd587f87003306aa286471",
+      "lastModificationDate": 1679315279086,
+      "contentHash": "0c2d431f7e4442742bc669a22284f2c4",
       "sourceName": "src/Dex.sol",
       "solcConfig": {
         "settings": {
@@ -956,8 +956,8 @@
       }
     },
     "test/Dex.t.sol": {
-      "lastModificationDate": 1679308719300,
-      "contentHash": "8180290545cb7d8e715805af71ab2c33",
+      "lastModificationDate": 1679314965677,
+      "contentHash": "6539d15da912343e9bcf6cc8c0ec58c8",
       "sourceName": "test/Dex.t.sol",
       "solcConfig": {
         "settings": {

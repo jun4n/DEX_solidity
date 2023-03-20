@@ -35,33 +35,44 @@ contract Dex is  ERC20{
         owner = msg.sender;
         token_x = tokenX;
         token_y = tokenY;
-        //token_LP = new LP_ERC20("DRM","DREAM_TOKEN");
     }
+
+    // imbalance check지우고 새로운 lp생성방법으로 변경
     function addLiquidity(uint256 tokenXAmount, uint256 tokenYAmount, uint256 minimumLPTokenAmount) external returns (uint256 LPTokenAmount){
-        require(totalSupply() == 0 || tokenXAmount / tokenYAmount == reserve_x / reserve_y, "");
-        // 유동성 전달받는 과정
-        bool success = ERC20(token_x).transferFrom(msg.sender, address(this), tokenXAmount);
-        require(success, "token x transferFrom failed");
-        success = ERC20(token_y).transferFrom(msg.sender, address(this), tokenYAmount);
-        require(success, "token y transferFrom failed");
-        reserve_x += tokenXAmount;
-        reserve_y += tokenYAmount;
+        console.log("%d %d", tokenXAmount, tokenYAmount);
+        require(tokenXAmount > 0, "a");
+        require(tokenYAmount > 0, "b");
+        console.log("%d",ERC20(token_x).allowance(msg.sender, address(this)));
+        // why error?
+        //require(ERC20(token_x).allowance(msg.sender, address(this)) >= tokenXAmount);
+        //require(ERC20(token_y).allowance(msg.sender, address(this)) >= tokenYAmount);
+        
+        // reserve를 항상 최신화
+        reserve_x = ERC20(token_x).balanceOf(address(this));
+        reserve_y = ERC20(token_y).balanceOf(address(this));
         
         // LP token 발급
+        // uniswap v2 => 처음 이후 lp: 넣을 토큰의 개수 * 원래 있었던 lP수 / 토큰 넣기전 리저브
+        uint token_amount;
         if(totalSupply() == 0){
             token_liquidity_L = sqrt(reserve_x * reserve_y);
+            token_amount = sqrt((tokenXAmount * tokenYAmount));
+        } else{
+            token_amount = tokenXAmount * totalSupply() / reserve_x;
         }
-        uint token_amount = sqrt((tokenXAmount * tokenYAmount));
+
+        ERC20(token_x).transferFrom(msg.sender, address(this), tokenXAmount);
+        ERC20(token_y).transferFrom(msg.sender, address(this), tokenYAmount);
+
         require(token_amount > minimumLPTokenAmount, "token_amount > minimumLPTokenAmount");
         _mint(msg.sender, token_amount);
-        return token_amount;
-    }
-    function mint(address to) external returns(uint liquidity) {
 
+        return token_amount;
     }
     function removeLiquidity(uint256 LPTokenAmount, uint256 minimumTokenXAmount, uint256 minimumTokenYAmount) external returns(uint rx, uint ry){
         require(balanceOf(msg.sender) >= LPTokenAmount, "balanceOf(msg.sender) >= LPTokenAmount");
-        
+        reserve_x = ERC20(token_x).balanceOf(address(this));
+        reserve_y = ERC20(token_y).balanceOf(address(this));
         // 소수점 이슈 발생
         //uint stake = LPTokenAmount / totalSupply();
         rx = reserve_x * LPTokenAmount / totalSupply();
@@ -76,12 +87,12 @@ contract Dex is  ERC20{
         ERC20(token_x).transfer(msg.sender, rx);
         ERC20(token_y).transfer(msg.sender, ry);
     }
-    function transfer(address to, uint256 lpAmount) override public returns (bool) { 
-
-    }
-    // 공급해놓은 유동성에서 토큰을 스왑한다는건가?
+    
     function swap(uint256 tokenXAmount, uint256 tokenYAmount, uint256 tokenMinimumOutputAmount) external returns (uint256 outputAmount){
-        require((tokenXAmount != 0 && tokenYAmount ==0 ) || (tokenYAmount != 0 && tokenXAmount == 0));
+        require((tokenXAmount > 0 && tokenYAmount == 0 ) || (tokenYAmount > 0 && tokenXAmount == 0));
+        reserve_x = ERC20(token_x).balanceOf(address(this));
+        reserve_y = ERC20(token_y).balanceOf(address(this));
+        
         uint tmp_reserve_y;
         uint tmp_reserve_x;
         // Y로 X교환, 수수료 이슈

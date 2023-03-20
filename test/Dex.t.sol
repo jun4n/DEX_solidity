@@ -57,6 +57,7 @@ contract DexTest is Test {
         console.log("!!!!!!!!!!!");
         console.logBytes4(dex.addLiquidity.selector);
         (bool success, ) = address(dex).call(abi.encodeWithSelector(dex.addLiquidity.selector, 1000 ether, 1000 ether, firstLPReturn * 10001 / 10000));
+        
         assertTrue(!success, "AddLiquidity minimum LP return error");
     }
 
@@ -66,6 +67,9 @@ contract DexTest is Test {
 
         (bool success, bytes memory alret) = address(dex).call(abi.encodeWithSelector(dex.addLiquidity.selector, 1000 ether, 4000 ether, 0));
         uint256 lpret = uint(bytes32(alret));
+        console.log("4444444");
+        console.log("%d", lpret);
+        console.logBool(success);
         assertTrue((firstLPReturn == lpret) || !success, "AddLiquidity imbalance add liquidity test error");
     }
 
@@ -89,10 +93,13 @@ contract DexTest is Test {
     }
 
     function testAddLiquidity6() external {
+        console.log(1);
         (bool success, ) = address(dex).call(abi.encodeWithSelector(dex.addLiquidity.selector, 0 ether, 0 ether, 0));
         assertTrue(!success, "AddLiquidity invalid initialization check error - 1");
+        console.log(1);
         (success, ) = address(dex).call(abi.encodeWithSelector(dex.addLiquidity.selector, 1 ether, 0 ether, 0));
         assertTrue(!success, "AddLiquidity invalid initialization check error - 2");
+        console.log(1);
         (success, ) = address(dex).call(abi.encodeWithSelector(dex.addLiquidity.selector, 0 ether, 1 ether, 0));
         assertTrue(!success, "AddLiquidity invalid initialization check error - 3");
     }
