@@ -68,7 +68,8 @@ contract Dex is  ERC20{
         //uint stake = LPTokenAmount / totalSupply();
         rx = reserve_x * LPTokenAmount / totalSupply();
         ry = reserve_y * LPTokenAmount / totalSupply();
-        console.log("!!!!%d, %d, %d", LPTokenAmount, rx, ry);
+        require(rx >= minimumTokenXAmount, "rx >= minimumTokenXAmount");
+        require(ry >= minimumTokenYAmount, "ry >= minimumTokenYAmount");
 
         reserve_x -= rx;
         reserve_y -= ry;
@@ -81,6 +82,22 @@ contract Dex is  ERC20{
 
     }
     function swap(uint256 tokenXAmount, uint256 tokenYAmount, uint256 tokenMinimumOutputAmount) external returns (uint256 outputAmount){
-
+        require(tokenXAmount != 0 || tokenYAmount != 0);
+        uint tmp_reserve_y;
+        uint tmp_reserve_x;
+        // Y로 X교환
+        if(tokenXAmount == 0){
+            tmp_reserve_y = reserve_y - tokenYAmount;
+            tmp_reserve_x = token_liquidity_L ** 2 / tmp_reserve_y;
+            require(reserve_x - tmp_reserve_x >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+        }else if(tokenYAmount == 0){
+            tmp_reserve_x = reserve_x - tokenXAmount;
+            tmp_reserve_y = token_liquidity_L ** 2 / tmp_reserve_x;
+            require(reserve_y - tmp_reserve_y >= tokenMinimumOutputAmount, "tokenMinimumOutputAmount");
+        }else{
+            revert();
+        }
+        reserve_x = tmp_reserve_x;
+        reserve_y = tmp_reserve_y;
     }
 }
