@@ -21,7 +21,7 @@ contract Dex is  ERC20{
     uint public fee_y;
     uint public fee_x;
 
-    function sqrt(uint y) public returns(uint z){
+    function sqrt(uint y) public pure returns(uint z){
         if (y > 3) {
             z = y;
             uint x = y / 2 + 1;
