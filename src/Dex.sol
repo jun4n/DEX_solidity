@@ -110,8 +110,6 @@ contract Dex is  ERC20{
         // 스왑 이후의 Y'
         // Y-Y' => 스왑으로 얻는 y토큰 => 수수료 0.1%
         // 여기서는 자리수 올려서 계산하는게 의미가 없는듯??????
-        // 수수료가 리저브에 남아있을경우 K가 swap전이랑 swap후에 변하게 됨. => 맞지?
-        // 그럼 애초에 어떻게해야하는거지????
         if(tokenXAmount == 0){
             require(ERC20(token_x).allowance(msg.sender, address(this)) >= tokenXAmount,"ERC20: insufficient allowance");
             
@@ -128,7 +126,6 @@ contract Dex is  ERC20{
             
             tmp_reserve_x = reserve_x + tokenXAmount;
             tmp_reserve_y = (reserve_x * reserve_y) / tmp_reserve_x;
-            // 수수료를 리저브에 넣어놓으면 K가 유지가 안된다.
             outputAmount = (reserve_y - tmp_reserve_y) * 999 / 1000;
             fee_y += (reserve_y - tmp_reserve_y) / 1000;
 
