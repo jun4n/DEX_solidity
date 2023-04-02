@@ -17,7 +17,6 @@ contract Dex is  ERC20{
     address public token_y;
     uint public reserve_x;
     uint public reserve_y;
-    uint public token_liquidity_L;
     uint public fee_y;
     uint public fee_x;
 
@@ -60,12 +59,19 @@ contract Dex is  ERC20{
         // 그냥 dex에 transfer시 다음에 유동성 공급하는사람은 lp 지분에 손해를 보는 구조...?????
         uint token_amount;
         if(totalSupply() == 0){
-            token_liquidity_L = sqrt(reserve_x * reserve_y);
             token_amount = sqrt((tokenXAmount * tokenYAmount));
         } else{
-            token_amount = (tokenXAmount * 10 ** 18 * totalSupply() / reserve_x) / 10 ** 18;
+            uint liquidity_x = (tokenXAmount * 10 ** 18 * totalSupply() / reserve_x) / 10 ** 18;
+            uint liquidity_y = (tokenYAmount * 10 ** 18 * totalSupply() / reserve_y) / 10 ** 18;
+            if(liquidity_x > liquidity_y){
+                token_amount = liquidity_y;
+                tokenXAmount = reserve_x * tokenYAmount / reserve_y;
+            }else{
+                token_amount = liquidity_x;
+                tokenYAmount = reserve_y * tokenXAmount / reserve_x;
+            }
         }
-        require(token_amount > minimumLPTokenAmount, "token_amount > minimumLPTokenAmount");
+        require(token_amount >= minimumLPTokenAmount, "token_amount >= minimumLPTokenAmount");
 
         require(ERC20(token_x).transferFrom(msg.sender, address(this), tokenXAmount));
         require(ERC20(token_y).transferFrom(msg.sender, address(this), tokenYAmount));
